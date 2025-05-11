@@ -1293,12 +1293,23 @@ BEG and END narrow the scope where candidates are searched."
     (avy-process
      (avy--regex-candidates regex beg end))))
 
+(defun avy--read-char (prompt &optional seconds)
+  "Read a character from the command input.
+PROMPT is displayed as the minibuffer prompt.
+If specified, SECONDS should be a number specifying the maximum number
+of seconds to wait for input. If no input arrives in that time, return
+nil.
+This function will wrap the base `read-char' function with a call to
+`event-basic-type' to ensure the returned character will pass
+  `characterp'."
+  (event-basic-type (read-char prompt t seconds)))
+
 ;;* Commands
 ;;;###autoload
 (defun avy-goto-char (char &optional arg)
   "Jump to the currently visible CHAR.
 The window scope is determined by `avy-all-windows' (ARG negates it)."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-char
     (avy-jump
@@ -1310,7 +1321,7 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
 ;;;###autoload
 (defun avy-goto-char-in-line (char)
   "Jump to the currently visible CHAR in the current line."
-  (interactive (list (read-char "char: " t)))
+  (interactive (list (avy--read-char "char: ")))
   (avy-with avy-goto-char
     (avy-jump
      (regexp-quote (string char))
@@ -1323,11 +1334,11 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
 BEG and END narrow the scope where candidates are searched."
-  (interactive (list (let ((c1 (read-char "char 1: " t)))
+  (interactive (list (let ((c1 (avy--read-char "char 1: ")))
                        (if (memq c1 '(? ?\b))
                            (keyboard-quit)
                          c1))
-                     (let ((c2 (read-char "char 2: " t)))
+                     (let ((c2 (avy--read-char "char 2: ")))
                        (cond ((eq c2 ?)
                               (keyboard-quit))
                              ((memq c2 avy-del-last-char-by)
@@ -1355,8 +1366,8 @@ This is a scoped version of `avy-goto-char-2', where the scope is
 the visible part of the current buffer up to point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char 1: " t)
-                     (read-char "char 2: " t)
+  (interactive (list (avy--read-char "char 1: ")
+                     (avy--read-char "char 2: ")
                      current-prefix-arg))
   (avy-with avy-goto-char-2-above
     (avy-goto-char-2
@@ -1370,8 +1381,8 @@ This is a scoped version of `avy-goto-char-2', where the scope is
 the visible part of the current buffer following point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char 1: " t)
-                     (read-char "char 2: " t)
+  (interactive (list (avy--read-char "char 1: ")
+                     (avy--read-char "char 2: ")
                      current-prefix-arg))
   (avy-with avy-goto-char-2-below
     (avy-goto-char-2
@@ -1458,7 +1469,7 @@ The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
 BEG and END narrow the scope where candidates are searched.
 When SYMBOL is non-nil, jump to symbol start instead of word start."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-word-1
     (let* ((str (string char))
@@ -1485,7 +1496,7 @@ This is a scoped version of `avy-goto-word-1', where the scope is
 the visible part of the current buffer up to point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-word-1
     (avy-goto-word-1 char arg (window-start) (point))))
@@ -1497,7 +1508,7 @@ This is a scoped version of `avy-goto-word-1', where the scope is
 the visible part of the current buffer following point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-word-1
     (avy-goto-word-1 char arg (point) (window-end (selected-window) t))))
@@ -1507,7 +1518,7 @@ When ARG is non-nil, do the opposite of `avy-all-windows'."
   "Jump to the currently visible CHAR at a symbol start.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-symbol-1
     (avy-goto-word-1 char arg nil nil t)))
@@ -1519,7 +1530,7 @@ This is a scoped version of `avy-goto-symbol-1', where the scope is
 the visible part of the current buffer up to point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-symbol-1-above
     (avy-goto-word-1 char arg (window-start) (point) t)))
@@ -1531,7 +1542,7 @@ This is a scoped version of `avy-goto-symbol-1', where the scope is
 the visible part of the current buffer following point.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-symbol-1-below
     (avy-goto-word-1 char arg (point) (window-end (selected-window) t) t)))
@@ -1591,7 +1602,7 @@ BEG and END narrow the scope where candidates are searched."
   "Jump to the currently visible CHAR at a subword start.
 The window scope is determined by `avy-all-windows' (ARG negates it).
 The case of CHAR is ignored."
-  (interactive (list (read-char "char: " t)
+  (interactive (list (avy--read-char "char: ")
                      current-prefix-arg))
   (avy-with avy-goto-subword-1
     (let ((char (downcase char)))
@@ -2083,12 +2094,11 @@ Otherwise, the whole regex is highlighted."
             (avy-window-list))
            (while (and (not break)
                        (setq char
-                             (read-char (format "%d  char%s: "
+                             (avy--read-char (format "%d  char%s: "
                                                 (length overlays)
                                                 (if (string= avy-text "")
                                                     avy-text
                                                   (format " (%s)" avy-text)))
-                                        t
                                         (and (not (string= avy-text ""))
                                              avy-timeout-seconds))))
              ;; Unhighlight
